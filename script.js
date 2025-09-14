@@ -23,6 +23,19 @@ if (adBanner) {
 // ffmpeg.wasm instance for post-recording transcoding
 let ffmpeg;
 let fetchFile;
+let ffmpegReady = false;
+
+// Preload ffmpeg in background to reduce stop-time latency
+(async () => {
+  try {
+    ffmpeg = FFmpeg.createFFmpeg({ log: false });
+    fetchFile = FFmpeg.fetchFile;
+    await ffmpeg.load();
+    ffmpegReady = true;
+  } catch (e) {
+    console.warn('FFmpeg preload failed', e);
+  }
+})();
 function showInterstitialAd() {
   if (!interstitialAd) return;
   interstitialAd.classList.remove('hidden');
@@ -104,10 +117,16 @@ function wrapQuestionText(text, maxWidth) {
 }
 
 async function transcodeToShorts(blob, ext) {
-  if (!ffmpeg) {
-    ffmpeg = FFmpeg.createFFmpeg({ log: true });
-    fetchFile = FFmpeg.fetchFile;
-    await ffmpeg.load();
+  if (!ffmpegReady) {
+    // Attempt lazy load if preload failed
+    try {
+      ffmpeg = ffmpeg || FFmpeg.createFFmpeg({ log: false });
+      fetchFile = FFmpeg.fetchFile;
+      await ffmpeg.load();
+      ffmpegReady = true;
+    } catch (e) {
+      throw e;
+    }
   }
   const inputName = `input.${ext}`;
   ffmpeg.FS('writeFile', inputName, await fetchFile(blob));
@@ -530,7 +549,8 @@ function setup() {
     });
   }
 
-  const stream = canvas.elt.captureStream(30);
+  // Capture at 60fps for smoother video
+  const stream = canvas.elt.captureStream(60);
   const audioDest = getAudioContext().createMediaStreamDestination();
   p5.soundOut.output.connect(audioDest);
   const combinedStream = new MediaStream([
@@ -542,30 +562,48 @@ function setup() {
   const mp4Type = 'video/mp4;codecs="avc1.42E01E,mp4a.40.2"';
   const mimeType = MediaRecorder.isTypeSupported(mp4Type)
                  ? mp4Type
-                 : 'video/webm';
+                 : 'video/webm;codecs=vp9,opus';
 
-  recorder = new MediaRecorder(combinedStream, { mimeType });
+  // Increase bitrate for better quality
+  const recOptions = { mimeType, videoBitsPerSecond: 8_000_000, audioBitsPerSecond: 192_000 };
+  try {
+    recorder = new MediaRecorder(combinedStream, recOptions);
+  } catch (_) {
+    // Fallback without explicit bitrates if not supported
+    recorder = new MediaRecorder(combinedStream, { mimeType });
+  }
   recorder.ondataavailable = e => {
     if (e.data.size > 0) recordedChunks.push(e.data);
   };
   recorder.onstop = async () => {
     const ext  = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
     const blob = new Blob(recordedChunks, { type: mimeType });
-    try {
-      const tBlob = await transcodeToShorts(blob, ext);
-      const url = URL.createObjectURL(tBlob);
-      recordedFile = new File([tBlob], 'jeu.mp4', { type: 'video/mp4' });
 
+    // Fast path: if we already have MP4, skip transcoding to reduce latency
+    if (ext === 'mp4') {
+      const url = URL.createObjectURL(blob);
+      recordedFile = new File([blob], 'jeu.mp4', { type: 'video/mp4' });
       if (downloadVideoBtn) {
         downloadVideoBtn.href = url;
         downloadVideoBtn.setAttribute('download', 'jeu.mp4');
         downloadVideoBtn.classList.remove('disabled');
-      } else {
-        createA(url, '📥 Télécharger la vidéo (.mp4)')
-          .attribute('download', 'jeu.mp4')
-          .position(20, 20);
       }
+      if (shareVideoBtn && navigator.canShare && navigator.canShare({ files: [recordedFile] })) {
+        shareVideoBtn.classList.remove('hidden');
+      }
+      return;
+    }
 
+    // Otherwise, try to transcode to MP4 if ffmpeg is ready; fall back to webm
+    try {
+      const tBlob = await transcodeToShorts(blob, ext);
+      const url = URL.createObjectURL(tBlob);
+      recordedFile = new File([tBlob], 'jeu.mp4', { type: 'video/mp4' });
+      if (downloadVideoBtn) {
+        downloadVideoBtn.href = url;
+        downloadVideoBtn.setAttribute('download', 'jeu.mp4');
+        downloadVideoBtn.classList.remove('disabled');
+      }
       if (shareVideoBtn && navigator.canShare && navigator.canShare({ files: [recordedFile] })) {
         shareVideoBtn.classList.remove('hidden');
       }
@@ -573,17 +611,11 @@ function setup() {
       console.error('Transcoding failed', err);
       const url = URL.createObjectURL(blob);
       recordedFile = new File([blob], `jeu.${ext}`, { type: mimeType });
-
       if (downloadVideoBtn) {
         downloadVideoBtn.href = url;
         downloadVideoBtn.setAttribute('download', `jeu.${ext}`);
         downloadVideoBtn.classList.remove('disabled');
-      } else {
-        createA(url, `📥 Télécharger la vidéo (.${ext})`)
-          .attribute('download', `jeu.${ext}`)
-          .position(20, 20);
       }
-
       if (shareVideoBtn && navigator.canShare && navigator.canShare({ files: [recordedFile] })) {
         shareVideoBtn.classList.remove('hidden');
       }

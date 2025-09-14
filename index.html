@@ -62,6 +62,7 @@
       <button id="btn-premium" class="premium-btn">👑 Premium</button>
       <button id="btn-lang" class="premium-btn">Changer langage</button>
       <button id="btn-mode" class="premium-btn">Mode: free</button>
+      <button id="btn-set-premium" class="premium-btn">Régler premium</button>
     </div>
   </div>
 
@@ -88,6 +89,17 @@
     </div>
   </div>
 
+  <div id="premium-modal" class="theme-modal hidden">
+    <div class="info-modal-content">
+      <button id="premium-close" class="info-close-btn">�o</button>
+      <div id="premium-options">
+        <div class="premium-option" data-mode="free">Bronze (gratuit) <span class="check">�o"</span></div>
+        <div class="premium-option" data-mode="premium1">Silver (test) <span class="check">�o"</span></div>
+        <div class="premium-option" data-mode="premium2">Gold (test) <span class="check">�o"</span></div>
+      </div>
+    </div>
+  </div>
+
   <script src="themes.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -109,7 +121,8 @@
           infoMoreBalls: "Active cette fonction pour ajouter autant de balles que tu veux pendant que ta roue tourne.",
           questionMax: '100 caractères maximum - la roue ne se lancera pas au-delà',
           changeLanguage: 'Changer langage',
-          premiumAccount: 'Compte premium'
+          premiumAccount: 'Compte premium',
+          setPremium: 'Régler premium'
         },
         en: {
           launch: 'Start',
@@ -127,7 +140,8 @@
           infoMoreBalls: 'Enable this feature to add as many balls as you want while the wheel spins.',
           questionMax: '100 characters maximum - the wheel cannot start past this',
           changeLanguage: 'Change language',
-          premiumAccount: 'Premium account'
+          premiumAccount: 'Premium account',
+          setPremium: 'Set premium'
         }
       };
     const langBtn = document.getElementById('btn-lang');
@@ -150,6 +164,10 @@
     const questionError = document.getElementById('questionError');
     const btnLaunch = document.getElementById('btn-launch');
     const adBanner = document.getElementById('adBanner');
+    const setPremiumBtn = document.getElementById('btn-set-premium');
+    const premiumModal = document.getElementById('premium-modal');
+    const premiumClose = document.getElementById('premium-close');
+    const premiumOptions = document.getElementById('premium-options');
     let selectedTheme = localStorage.getItem('selectedTheme');
     const savedQuestion = localStorage.getItem('question') || '';
     const savedDuration = localStorage.getItem('duration');
@@ -162,6 +180,7 @@
       btnLaunch.textContent = t.launch;
       document.getElementById('btn-premium').textContent = '👑 ' + t.premium;
       langBtn.textContent = `${t.changeLanguage} (${lang.toUpperCase()})`;
+      if (setPremiumBtn) setPremiumBtn.textContent = t.setPremium;
       themeSelectorBtn.textContent = selectedTheme ? themeConfigs[selectedTheme].name : t.chooseTheme;
       themeSelectorBtn.style.background = selectedTheme ? `linear-gradient(135deg, #${themeConfigs[selectedTheme].yesColors[0]}, #${themeConfigs[selectedTheme].tieColors[0]}, #${themeConfigs[selectedTheme].noColors[0]})` : '';
       themeSelectorBtn.style.color = selectedTheme && selectedTheme !== '5' ? '#000' : '#fff';
@@ -205,7 +224,35 @@
       updateLangOptions();
     });
 
-    
+    // Premium level picker (dev/test)
+    function updatePremiumOptionsUI() {
+      if (!premiumOptions) return;
+      [...premiumOptions.querySelectorAll('.premium-option')].forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.mode === currentMode);
+      });
+    }
+    if (setPremiumBtn) {
+      setPremiumBtn.addEventListener('click', () => {
+        premiumModal.classList.remove('hidden');
+        updatePremiumOptionsUI();
+      });
+    }
+    if (premiumClose) {
+      premiumClose.addEventListener('click', () => premiumModal.classList.add('hidden'));
+    }
+    if (premiumModal) {
+      premiumModal.addEventListener('click', e => { if (e.target === premiumModal) premiumModal.classList.add('hidden'); });
+    }
+    if (premiumOptions) {
+      premiumOptions.addEventListener('click', e => {
+        const opt = e.target.closest('.premium-option');
+        if (!opt) return;
+        currentMode = opt.dataset.mode;
+        updateMode();
+        updatePremiumOptionsUI();
+        premiumModal.classList.add('hidden');
+      });
+    }
 
     // ── Helpers pour le slider custom ──
     function snap(v, min, step) {
