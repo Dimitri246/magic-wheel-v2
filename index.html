@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Accueil – Wheel Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="menu-card">
+    <img id="bannerImage" class="banner" src="assets/baniere_fr.png" alt="Bannière">
+
+
+      <div class="config-frame">
+        <label for="questionInput" id="questionLabel" class="question-label">Question (optionnel)</label>
+        <input type="text" id="questionInput" class="question-input" placeholder="100 caractères max">
+        <p id="questionError" class="error-message"></p>
+
+      <section class="settings-group">
+        <label><span id="duration-label-text">Durée</span></label>
+        <div class="custom-slider" id="slider-duration"
+             data-min="15" data-max="60" data-step="15" data-value="30">
+          <div class="track"></div>
+          <div class="fill"></div>
+          <div class="thumb"></div>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <label><span id="balls-label-text">Nombre de balles</span></label>
+        <div class="custom-slider" id="slider-balls"
+             data-min="1" data-max="3" data-step="1" data-value="1">
+          <div class="track"></div>
+          <div class="fill"></div>
+          <div class="thumb"></div>
+        </div>
+      </section>
+
+        <p id="themeLabel" class="theme-label"></p>
+        <button id="theme-selector" class="theme-select-btn">Choisir un thème</button>
+
+      <details id="more-options" class="more-options">
+        <summary id="moreOptionsSummary">Plus d'options</summary>
+        <div class="more-options-content">
+          <div class="option-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="extraBalls">
+              <span id="moreBallsText">Plus de balles</span>
+            </label>
+            <button type="button" id="extraBallsInfo" class="info-btn">i</button>
+          </div>
+        </div>
+      </details>
+
+        <div class="action-buttons">
+          <button id="btn-random" class="random-btn" title="Aléatoire">🎲</button>
+          <button id="btn-launch" class="launch-btn" disabled>⚡ Lancer</button>
+        </div>
+    </div>
+
+    <div class="bottom-buttons">
+      <button id="btn-premium" class="premium-btn">👑 Premium</button>
+      <button id="btn-lang" class="premium-btn">Changer langage</button>
+      <button id="btn-mode" class="premium-btn">Mode: free</button>
+    </div>
+  </div>
+
+  <div id="adBanner" class="ad-banner hidden">Publicité</div>
+
+  <div id="theme-modal" class="theme-modal hidden">
+    <div class="theme-modal-content" id="theme-options"></div>
+  </div>
+
+  <div id="info-modal" class="theme-modal hidden">
+    <div class="info-modal-content">
+      <button id="info-close" class="info-close-btn">✕</button>
+      <div id="info-modal-text"></div>
+    </div>
+  </div>
+
+  <div id="lang-modal" class="theme-modal hidden">
+    <div class="info-modal-content">
+      <button id="lang-close" class="info-close-btn">✕</button>
+      <div id="lang-options">
+        <div class="lang-option" data-lang="fr">Français <span class="check">✓</span></div>
+        <div class="lang-option" data-lang="en">English <span class="check">✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="themes.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // ── Localisation ──
+    const translations = {
+        fr: {
+          launch: 'Lancer',
+          premium: 'Premium',
+          bannerAlt: 'Bannière',
+          questionPlaceholder: '100 caractères max',
+          random: 'Aléatoire',
+          chooseTheme: 'Choisir un thème',
+          themeLabel: 'Sélectionne un thème',
+          questionTitle: 'Question (optionnel)',
+          duration: 'Durée',
+          ballCount: 'Nombre de balles',
+          moreOptions: "Plus d'options",
+          moreBalls: 'Plus de balles',
+          infoMoreBalls: "Active cette fonction pour ajouter autant de balles que tu veux pendant que ta roue tourne.",
+          questionMax: '100 caractères maximum - la roue ne se lancera pas au-delà',
+          changeLanguage: 'Changer langage',
+          premiumAccount: 'Compte premium'
+        },
+        en: {
+          launch: 'Start',
+          premium: 'Premium',
+          bannerAlt: 'Banner',
+          questionPlaceholder: '100 characters max',
+          random: 'Random',
+          chooseTheme: 'Choose theme',
+          themeLabel: 'Select a theme',
+          questionTitle: 'Question (optional)',
+          duration: 'Duration',
+          ballCount: 'Number of balls',
+          moreOptions: 'More options',
+          moreBalls: 'More balls',
+          infoMoreBalls: 'Enable this feature to add as many balls as you want while the wheel spins.',
+          questionMax: '100 characters maximum - the wheel cannot start past this',
+          changeLanguage: 'Change language',
+          premiumAccount: 'Premium account'
+        }
+      };
+    const langBtn = document.getElementById('btn-lang');
+    const langModal = document.getElementById('lang-modal');
+    const langOptions = document.getElementById('lang-options');
+    const langClose = document.getElementById('lang-close');
+    const themeSelectorBtn = document.getElementById('theme-selector');
+    const themeModal = document.getElementById('theme-modal');
+    const themeOptions = document.getElementById('theme-options');
+    const themeLabelEl = document.getElementById('themeLabel');
+    const durationLabelText = document.getElementById('duration-label-text');
+    const ballsLabelText = document.getElementById('balls-label-text');
+    const questionLabelEl = document.getElementById('questionLabel');
+    const btnRandom = document.getElementById('btn-random');
+    const extraBallsCheckbox = document.getElementById('extraBalls');
+    const infoModal = document.getElementById('info-modal');
+    const extraBallsInfo = document.getElementById('extraBallsInfo');
+    const infoClose = document.getElementById('info-close');
+    const questionInput = document.getElementById('questionInput');
+    const questionError = document.getElementById('questionError');
+    const btnLaunch = document.getElementById('btn-launch');
+    const adBanner = document.getElementById('adBanner');
+    let selectedTheme = localStorage.getItem('selectedTheme');
+    const savedQuestion = localStorage.getItem('question') || '';
+    const savedDuration = localStorage.getItem('duration');
+    const savedBalls = localStorage.getItem('balls');
+    const savedExtra = localStorage.getItem('extraBalls') === 'true';
+    questionInput.value = savedQuestion;
+    let lang = localStorage.getItem('lang') || ((navigator.language || 'en').startsWith('fr') ? 'fr' : 'en');
+    function applyLang() {
+      const t = translations[lang];
+      btnLaunch.textContent = t.launch;
+      document.getElementById('btn-premium').textContent = '👑 ' + t.premium;
+      langBtn.textContent = `${t.changeLanguage} (${lang.toUpperCase()})`;
+      themeSelectorBtn.textContent = selectedTheme ? themeConfigs[selectedTheme].name : t.chooseTheme;
+      themeSelectorBtn.style.background = selectedTheme ? `linear-gradient(135deg, #${themeConfigs[selectedTheme].yesColors[0]}, #${themeConfigs[selectedTheme].tieColors[0]}, #${themeConfigs[selectedTheme].noColors[0]})` : '';
+      themeSelectorBtn.style.color = selectedTheme && selectedTheme !== '5' ? '#000' : '#fff';
+      themeLabelEl.textContent = t.themeLabel;
+      questionLabelEl.textContent = t.questionTitle;
+      durationLabelText.textContent = t.duration;
+      ballsLabelText.textContent = t.ballCount;
+      btnRandom.textContent = '🎲';
+      btnRandom.title = t.random;
+      const bannerImg = document.getElementById('bannerImage');
+
+      bannerImg.src = `assets/baniere_${lang}.png`;
+      bannerImg.alt = t.bannerAlt;
+      questionInput.placeholder = t.questionPlaceholder;
+      document.getElementById('moreOptionsSummary').textContent = t.moreOptions;
+      document.getElementById('moreBallsText').textContent = t.moreBalls;
+      document.getElementById('info-modal-text').textContent = t.infoMoreBalls;
+      document.documentElement.lang = lang;
+    }
+
+    function updateLangOptions() {
+      [...langOptions.querySelectorAll('.lang-option')].forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.lang === lang);
+      });
+    }
+
+    applyLang();
+    updateLangOptions();
+    langBtn.addEventListener('click', () => {
+      langModal.classList.remove('hidden');
+    });
+    langClose.addEventListener('click', () => { langModal.classList.add('hidden'); });
+    langModal.addEventListener('click', e => { if (e.target === langModal) langModal.classList.add('hidden'); });
+    langOptions.addEventListener('click', e => {
+      const opt = e.target.closest('.lang-option');
+      if (!opt) return;
+      lang = opt.dataset.lang;
+      localStorage.setItem('lang', lang);
+      applyLang();
+      validateQuestion();
+      updateLangOptions();
+    });
+
+    
+
+    // ── Helpers pour le slider custom ──
+    function snap(v, min, step) {
+      return Math.round((v - min)/step) * step + min;
+    }
+      function initCustomSlider(id, onChange) {
+        const container = document.getElementById(id);
+      const min   = +container.dataset.min;
+      const max   = +container.dataset.max;
+      const step  = +container.dataset.step;
+      let   value = +container.dataset.value;
+
+      const track = container.querySelector('.track');
+      const fill  = container.querySelector('.fill');
+      const thumb = container.querySelector('.thumb');
+
+      // create ticks below the slider
+      const ticks = document.createElement('div');
+      ticks.className = 'slider-ticks';
+      for (let v = min; v <= max; v += step) {
+        const tick = document.createElement('span');
+        tick.className = 'slider-tick';
+        tick.dataset.value = v;
+        tick.textContent = v;
+        ticks.appendChild(tick);
+      }
+      container.parentNode.insertBefore(ticks, container.nextSibling);
+
+      function updateUI(v) {
+        const rect = track.getBoundingClientRect();
+        const pct  = (v - min)/(max-min);
+        const x    = pct * rect.width;
+        fill.style.width = x + 'px';
+        thumb.style.left = x + 'px';
+        onChange(v);
+        ticks.querySelectorAll('.slider-tick').forEach(t => {
+          t.classList.toggle('active', +t.dataset.value === v);
+        });
+      }
+
+      // clic sur la track
+      track.addEventListener('click', e => {
+        const rect = track.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+        value = snap(min + pct*(max-min), min, step);
+        updateUI(value);
+      });
+
+      // clic sur la graduation
+      ticks.addEventListener('click', e => {
+        const t = e.target.closest('.slider-tick');
+        if (!t) return;
+        value = +t.dataset.value;
+        updateUI(value);
+      });
+
+      // drag du thumb
+      let dragging = false;
+      thumb.addEventListener('pointerdown', () => {
+        dragging = true;
+        document.body.style.userSelect = 'none';
+      });
+      document.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const rect = track.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+        value = snap(min + pct*(max-min), min, step);
+        updateUI(value);
+      });
+      document.addEventListener('pointerup', () => {
+        dragging = false;
+        document.body.style.userSelect = '';
+      });
+
+        updateUI(value);
+        return {
+          get: () => Math.round(value),
+          set: (v) => {
+            value = snap(v, min, step);
+            updateUI(value);
+          }
+        };
+      }
+
+      // ── Instanciation des sliders ──
+      const durationSlider = initCustomSlider('slider-duration', v => {
+        localStorage.setItem('duration', v);
+      });
+      const ballsSlider    = initCustomSlider('slider-balls', v => {
+        localStorage.setItem('balls', v);
+      });
+      if (savedDuration) durationSlider.set(+savedDuration);
+      if (savedBalls) ballsSlider.set(+savedBalls);
+      extraBallsCheckbox.checked = savedExtra;
+      function getDuration() { return durationSlider.get(); }
+      function getBalls() { return ballsSlider.get(); }
+
+    function updateLaunchButton() {
+        btnLaunch.disabled = !selectedTheme || questionInput.value.trim().length > 100;
+    }
+
+    function validateQuestion() {
+        if (questionInput.value.length > 100) {
+        questionError.textContent = translations[lang].questionMax;
+        questionError.classList.add('visible');
+      } else {
+        questionError.textContent = '';
+        questionError.classList.remove('visible');
+      }
+      updateLaunchButton();
+    }
+
+    questionInput.addEventListener('input', () => {
+      localStorage.setItem('question', questionInput.value);
+      validateQuestion();
+    });
+    validateQuestion();
+
+    // ── Sélection de thème ──
+    let currentMode = localStorage.getItem('mode') || 'free';
+    const extraBallsLabel = extraBallsCheckbox.parentElement;
+    const extraBallsItem = extraBallsLabel.parentElement;
+    extraBallsCheckbox.addEventListener('change', () => {
+      localStorage.setItem('extraBalls', extraBallsCheckbox.checked);
+    });
+    extraBallsLabel.addEventListener('click', () => {
+      if (extraBallsCheckbox.disabled) {
+        window.location.href = 'premium.html';
+      }
+    });
+    function updateExtraBallsOption() {
+      if (currentMode === 'premium2') {
+        extraBallsCheckbox.disabled = false;
+        extraBallsItem.classList.remove('disabled');
+      } else {
+        extraBallsCheckbox.checked = false;
+        extraBallsCheckbox.disabled = true;
+        extraBallsItem.classList.add('disabled');
+      }
+    }
+    updateExtraBallsOption();
+
+    function drawThemeThumb(canvas, themeId) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      switch (String(themeId)) {
+        case '1': {
+          const g = ctx.createLinearGradient(0, 0, 0, h);
+          g.addColorStop(0, '#6EC6FF');
+          g.addColorStop(1, '#B39DDB');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+          break;
+        }
+        case '2': {
+          const g = ctx.createLinearGradient(0, 0, w, h);
+          g.addColorStop(0, '#B6FF4D');
+          g.addColorStop(1, '#FF4DFF');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+          break;
+        }
+        case '3': {
+          const g = ctx.createLinearGradient(0, 0, 0, h);
+          g.addColorStop(0, '#1DD6C3');
+          g.addColorStop(1, '#006994');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FF6F61';
+          [[w*0.25,h*0.65,5],[w*0.6,h*0.75,4],[w*0.7,h*0.3,3]].forEach(([x,y,r])=>{
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          break;
+        }
+        case '4': {
+          const g = ctx.createLinearGradient(0, 0, 0, h);
+          g.addColorStop(0, '#7AD1FF');
+          g.addColorStop(1, '#E3F6FF');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.moveTo(w / 2, h * 0.3);
+          ctx.lineTo(w * 0.65, h * 0.7);
+          ctx.lineTo(w * 0.35, h * 0.7);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        case '5': {
+          const g = ctx.createLinearGradient(0, 0, w, 0);
+          g.addColorStop(0, '#2B2EFA');
+          g.addColorStop(0.5, '#4B1F8A');
+          g.addColorStop(1, '#FF4A3D');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FFFFFF';
+          [[w*0.2,h*0.2],[w*0.7,h*0.25],[w*0.4,h*0.5],[w*0.8,h*0.75],[w*0.3,h*0.8]].forEach(([x,y])=>{
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          break;
+        }
+      }
+    }
+
+    Object.entries(themeConfigs).forEach(([id, cfg]) => {
+      const opt = document.createElement('button');
+      opt.className = 'theme-option';
+      opt.dataset.theme = id;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 40;
+      canvas.height = 40;
+      canvas.className = 'theme-thumb';
+      drawThemeThumb(canvas, id);
+      opt.appendChild(canvas);
+
+      const span = document.createElement('span');
+      span.textContent = cfg.name;
+      opt.appendChild(span);
+
+      themeOptions.appendChild(opt);
+    });
+
+    function applyThemeLocks() {
+      themeOptions.querySelectorAll('.theme-option').forEach((btn, index) => {
+        if (index >= 2 && currentMode !== 'premium2') {
+          btn.classList.add('locked');
+        } else {
+          btn.classList.remove('locked');
+        }
+      });
+    }
+
+    themeSelectorBtn.addEventListener('click', () => {
+      themeModal.classList.remove('hidden');
+    });
+
+    themeModal.addEventListener('click', (e) => {
+      if (e.target === themeModal) {
+        themeModal.classList.add('hidden');
+      }
+    });
+
+    extraBallsInfo.addEventListener('click', () => {
+      infoModal.classList.remove('hidden');
+    });
+
+    infoModal.addEventListener('click', (e) => {
+      if (e.target === infoModal) {
+        infoModal.classList.add('hidden');
+      }
+    });
+
+    infoClose.addEventListener('click', () => {
+      infoModal.classList.add('hidden');
+    });
+
+    themeOptions.addEventListener('click', (e) => {
+      const btn = e.target.closest('.theme-option');
+      if (!btn) return;
+      if (btn.classList.contains('locked')) {
+        window.location.href = 'premium.html';
+        return;
+      }
+      selectedTheme = btn.dataset.theme;
+      localStorage.setItem('selectedTheme', selectedTheme);
+      themeSelectorBtn.textContent = themeConfigs[selectedTheme].name;
+      themeSelectorBtn.style.background = `linear-gradient(135deg, #${themeConfigs[selectedTheme].yesColors[0]}, #${themeConfigs[selectedTheme].tieColors[0]}, #${themeConfigs[selectedTheme].noColors[0]})`;
+      themeSelectorBtn.style.color = selectedTheme !== '5' ? '#000' : '#fff';
+      updateLaunchButton();
+      themeModal.classList.add('hidden');
+    });
+
+    applyThemeLocks();
+
+      const randomQuestions = {
+        fr: [
+          'Dois-je sortir ce soir ?',
+          'Vais-je réussir mon examen ?',
+          "Est-ce une bonne idée d'acheter ceci ?",
+          'Devrais-je appeler un ami ?',
+          'Dois-je commander une pizza ?',
+          'Est-ce que demain il fera beau ?',
+          'Dois-je regarder un film ce soir ?',
+          "Vais-je trouver l'amour ?",
+          'Dois-je prendre un café ?',
+          'Devrais-je faire du sport aujourd\u2019hui ?',
+          'Est-ce que je vais gagner à la loterie ?',
+          'Dois-je apprendre une nouvelle langue ?',
+          'Devrais-je partir en voyage bientôt ?',
+          'Est-ce le bon moment pour un nouveau projet ?',
+          'Dois-je me coucher tôt ce soir ?'
+        ],
+        en: [
+          'Should I go out tonight?',
+          'Will I pass my exam?',
+          'Is it a good idea to buy this?',
+          'Should I call a friend?',
+          'Should I order pizza?',
+          'Will the weather be nice tomorrow?',
+          'Should I watch a movie tonight?',
+          'Will I find love?',
+          'Should I have a coffee?',
+          'Should I work out today?',
+          'Will I win the lottery?',
+          'Should I learn a new language?',
+          'Should I go on a trip soon?',
+          'Is it the right time for a new project?',
+          'Should I go to bed early tonight?'
+        ]
+      };
+
+      btnRandom.addEventListener('click', () => {
+        const qList = randomQuestions[lang];
+        questionInput.value = qList[Math.floor(Math.random() * qList.length)];
+        validateQuestion();
+
+        const durations = [30, 45, 60];
+        const d = durations[Math.floor(Math.random() * durations.length)];
+        durationSlider.set(d);
+
+        const ballsOpts = [1, 2, 3];
+        const b = ballsOpts[Math.floor(Math.random() * ballsOpts.length)];
+        ballsSlider.set(b);
+
+        const available = Array.from(themeOptions.querySelectorAll('.theme-option')).filter(btn => !btn.classList.contains('locked'));
+        if (available.length) {
+          const choice = available[Math.floor(Math.random() * available.length)];
+          choice.click();
+        }
+      });
+
+      // ── Lancement du jeu ──
+    btnLaunch.addEventListener('click', () => {
+      const d = getDuration();
+      const b = getBalls();
+      const q = questionInput.value.trim();
+        if (q.length > 100) return;
+      const extra = extraBallsCheckbox.checked;
+      let url = `game.html?theme=${selectedTheme}&duration=${d}&balls=${b}`;
+      if (q) url += `&question=${encodeURIComponent(q)}`;
+      if (extra) url += '&addBalls=1';
+      window.location.href = url;
+    });
+
+    document.getElementById('btn-premium').addEventListener('click', () => {
+      window.location.href = 'premium.html';
+    });
+
+    const modeBtn = document.getElementById('btn-mode');
+    const modes = ['free', 'premium1', 'premium2'];
+    function updateMode() {
+      modeBtn.textContent = `Mode: ${currentMode}`;
+      localStorage.setItem('mode', currentMode);
+      applyThemeLocks();
+      updateExtraBallsOption();
+      if (adBanner) {
+        adBanner.classList.toggle('hidden', currentMode !== 'free');
+      }
+    }
+    modeBtn.addEventListener('click', () => {
+      const idx = modes.indexOf(currentMode);
+      currentMode = modes[(idx + 1) % modes.length];
+      updateMode();
+    });
+    updateMode();
+  });
+  </script>
+</body>
+</html>

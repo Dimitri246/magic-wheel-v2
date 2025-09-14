@@ -1,0 +1,13 @@
+{
+  "name": "magic-wheel",
+  "version": "1.0.0",
+  "description": "Auth and subscription demo",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/auth.test.js && node test/flow.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

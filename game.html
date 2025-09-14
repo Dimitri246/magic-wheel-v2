@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Jeu de la Roue</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- 1) p5 core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js" defer></script>
+  <!-- 2) p5.sound addon -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js" defer></script>
+  <!-- 3) votre config de thèmes -->
+  <script src="themes.js" defer></script>
+  <!-- 4) ffmpeg.wasm for post-recording transcoding -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js" defer></script>
+  <!-- 5) votre code principal (préload, setup, draw…) -->
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- le canvas p5 + tout votre jeu se chargeront automatiquement -->
+  <div id="overlay" class="overlay">
+    <div id="menuContent" class="menu-card menu-content">
+      <p class="menu-message">Appuie pendant que la roue tourne pour faire apparaitre ce menu</p>
+      <p id="pauseScore" class="pause-score"></p>
+      <div class="menu-actions">
+        <button id="goBtn" class="menu-btn">Go</button>
+        <button id="upgradeBtn" class="menu-btn hidden">Passer Premium</button>
+        <button id="retryBtn" class="menu-btn hidden">Retry</button>
+        <button id="homeBtn" class="menu-btn">Home</button>
+      </div>
+    </div>
+  <div id="countdown" class="countdown hidden"></div>
+  </div>
+
+  <p id="hudQuestion" class="hud-question hidden"></p>
+
+  <div id="addBallBtn" class="add-ball-btn hidden">⚽</div>
+  <div id="removeBallBtn" class="remove-ball-btn hidden">➖</div>
+
+  <!-- Résultat final -->
+  <div id="resultOverlay" class="overlay hidden">
+    <div class="menu-card result-card">
+      <h2 id="resultTitle"></h2>
+      <p id="resultQuestion" class="result-question"></p>
+      <p id="resultScore" class="result-score"></p>
+        <div class="menu-actions">
+          <button id="resultRetryBtn" class="menu-btn">Retry</button>
+          <button id="resultHomeBtn" class="menu-btn">Home</button>
+          <a id="downloadVideoBtn" class="menu-btn hidden" title="Télécharger la vidéo">Enregistrer</a>
+          <button id="shareVideoBtn" class="menu-btn hidden">Partager</button>
+        </div>
+      </div>
+    </div>
+    <div id="premiumPopup" class="premium-popup hidden">
+      <div class="premium-popup-content">
+        <button id="premiumCloseBtn" class="popup-close">✕</button>
+        <p id="premiumPopupText"></p>
+        <table class="premium-popup-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Bronze<br><span class="price">gratuit</span></th>
+              <th>Silver<br><span class="price">0,99€/mois</span></th>
+              <th>Gold<br><span class="price">1,99€/mois</span></th>
+            </tr>
+          </thead>
+            <tbody>
+              <tr>
+                <td id="popupNoAds">Pas de publicités</td>
+                <td><span class="icon-cross">✗</span></td>
+                <td><span class="icon-check">✓</span></td>
+                <td><span class="icon-check">✓</span></td>
+              </tr>
+              <tr>
+                <td id="popupRecordings">Enregistrements/jour</td>
+                <td>3</td>
+                <td id="popupUnlimited1">Illimité</td>
+                <td id="popupUnlimited2">Illimité</td>
+              </tr>
+              <tr>
+                <td id="popupTemplates">Accès aux templates</td>
+                <td><span class="icon-cross">✗</span></td>
+                <td><span class="icon-cross">✗</span></td>
+                <td><span class="icon-check">✓</span></td>
+              </tr>
+            </tbody>
+          </table>
+        <button id="premiumPlanBtn" class="menu-btn">Passer au plan</button>
+      </div>
+    </div>
+
+    <div id="ballLimitPopup" class="premium-popup hidden">
+      <div class="premium-popup-content">
+        <button id="ballLimitCloseBtn" class="popup-close">✕</button>
+        <p>ça fait beaucoup là, non ?</p>
+      </div>
+    </div>
+
+  <div id="adBanner" class="ad-banner hidden">Publicité</div>
+  <div id="interstitialAd" class="interstitial-ad hidden">
+    <div class="ad-content">Publicité</div>
+  </div>
+  </body>
+</html>

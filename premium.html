@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Offres Premium – Wheel Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="menu-card premium-card">
+    <h1 id="premiumTitle">👑 Offres Premium</h1>
+
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Bronze<br><span class="price" id="bronzePrice">gratuit</span></th>
+          <th>Silver<br><span class="price" id="silverPrice"><span class="old-price">1,99€/mois</span><br>0,99€/mois</span></th>
+          <th>Gold<br><span class="price" id="goldPrice"><span class="old-price">3,99€/mois</span><br>1,99€/mois</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="noAdsLabel">Pas de publicités</td>
+          <td><span class="icon-cross">✗</span></td>
+          <td><span class="icon-check">✓</span></td>
+          <td><span class="icon-check">✓</span></td>
+        </tr>
+        <tr>
+          <td id="recordingsLabel">Nombre d'enregistrements par jour</td>
+          <td>3</td>
+          <td id="silverLimit">Illimité</td>
+          <td id="goldLimit">Illimité</td>
+        </tr>
+        <tr>
+          <td id="templatesLabel">Accès aux templates</td>
+          <td><span class="icon-cross">✗</span></td>
+          <td><span class="icon-cross">✗</span></td>
+          <td><span class="icon-check">✓</span></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+          <td><button class="premium-btn buy-btn">Acheter</button></td>
+          <td><button class="premium-btn buy-btn">Acheter</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button id="manageBtn" class="premium-btn hidden">Gérer mon abonnement</button>
+    <button id="backBtn" class="premium-btn" onclick="window.location.href='index.html'">Retour au menu</button>
+  </div>
+  <script>
+    const translations = {
+      fr: {
+        title: '👑 Offres Premium',
+        priceFree: 'gratuit',
+        priceSilver: '<span class="old-price">1,99€/mois</span><br>0,99€/mois',
+        priceGold: '<span class="old-price">3,99€/mois</span><br>1,99€/mois',
+        noAds: 'Pas de publicités',
+        recordings: "Nombre d'enregistrements par jour",
+        unlimited: 'Illimité',
+        templates: 'Accès aux templates',
+        buy: 'Acheter',
+        back: 'Retour au menu',
+        manage: 'Gérer mon abonnement'
+      },
+      en: {
+        title: '👑 Premium Offers',
+        priceFree: 'free',
+        priceSilver: '<span class="old-price">€1.99/mo</span><br>€0.99/mo',
+        priceGold: '<span class="old-price">€3.99/mo</span><br>€1.99/mo',
+        noAds: 'No ads',
+        recordings: 'Recordings per day',
+        unlimited: 'Unlimited',
+        templates: 'Template access',
+        buy: 'Buy',
+        back: 'Back to menu',
+        manage: 'Manage subscription'
+      }
+    };
+    const lang = localStorage.getItem('lang') || ((navigator.language || 'en').startsWith('fr') ? 'fr' : 'en');
+    document.documentElement.lang = lang;
+    const t = translations[lang];
+    document.getElementById('premiumTitle').textContent = t.title;
+    document.getElementById('bronzePrice').innerHTML = t.priceFree;
+    document.getElementById('silverPrice').innerHTML = t.priceSilver;
+    document.getElementById('goldPrice').innerHTML = t.priceGold;
+    document.getElementById('noAdsLabel').textContent = t.noAds;
+    document.getElementById('recordingsLabel').textContent = t.recordings;
+    document.getElementById('silverLimit').textContent = t.unlimited;
+    document.getElementById('goldLimit').textContent = t.unlimited;
+    document.getElementById('templatesLabel').textContent = t.templates;
+    document.querySelectorAll('.buy-btn').forEach(btn => btn.textContent = t.buy);
+    const manageBtn = document.getElementById('manageBtn');
+    document.getElementById('backBtn').textContent = t.back;
+    manageBtn.textContent = t.manage;
+    const currentMode = localStorage.getItem('mode') || 'free';
+    if (currentMode !== 'free') {
+      manageBtn.classList.remove('hidden');
+    }
+    manageBtn.addEventListener('click', () => {
+      window.location.href = 'subscription/manage.html';
+    });
+  </script>
+</body>
+</html>
